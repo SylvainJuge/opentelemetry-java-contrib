@@ -13,4 +13,8 @@ dependencies {
   compileOnly(project(":semconv-processor"))
   annotationProcessor(project(":semconv-processor"))
 
+tasks {
+  compileJava {
+    // options.compilerArgs = options.compilerArgs + "-"
+  }
 }
