@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.contrib.stacktrace.internal.Attributes;
 import io.opentelemetry.contrib.stacktrace.internal.TestUtils;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
@@ -54,7 +55,7 @@ class StackTraceSpanProcessorTest {
         span -> true,
         20,
         1,
-        sb -> sb.setAttribute(StackTraceSpanProcessor.SPAN_STACKTRACE, "hello"),
+        sb -> sb.setAttribute(Attributes.CODE_STACKTRACE, "hello"),
         stacktrace -> assertThat(stacktrace).isEqualTo("hello"));
   }
 
@@ -99,7 +100,7 @@ class StackTraceSpanProcessorTest {
 
       if (!finishedSpans.isEmpty()) {
         String stackTrace =
-            finishedSpans.get(0).getAttributes().get(StackTraceSpanProcessor.SPAN_STACKTRACE);
+            finishedSpans.get(0).getAttributes().get(Attributes.CODE_STACKTRACE);
 
         stackTraceCheck.accept(stackTrace);
       }
