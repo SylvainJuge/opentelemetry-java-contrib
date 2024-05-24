@@ -1,3 +1,5 @@
+import java.util.*
+
 plugins {
   id("otel.java-conventions")
 }
@@ -16,6 +18,9 @@ dependencies {
 
 tasks {
   compileJava {
-    // options.compilerArgs = options.compilerArgs + "-"
+    options.forkOptions.jvmArgs?.addAll(Arrays.asList("--module-path", ""));
+
+//    options.forkOptions.jvmArgs?.add("-Xdebug")
+//    options.forkOptions.jvmArgs?.add("-Xrunjdwp:transport=dt_socket,server=n,address=localhost:5005,suspend=y")
   }
 }

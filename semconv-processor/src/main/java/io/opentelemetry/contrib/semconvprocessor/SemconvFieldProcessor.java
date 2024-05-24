@@ -1,11 +1,16 @@
 package io.opentelemetry.contrib.semconvprocessor;
 
 import com.google.auto.service.AutoService;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
+import com.sun.source.util.TreePathScanner;
+import com.sun.source.util.Trees;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -26,6 +31,14 @@ import javax.tools.Diagnostic;
 @SupportedSourceVersion(SourceVersion.RELEASE_8)
 public class SemconvFieldProcessor extends AbstractProcessor {
 
+  private Trees trees;
+
+  @Override
+  public synchronized void init(ProcessingEnvironment processingEnv) {
+    super.init(processingEnv);
+    this.trees = Trees.instance(processingEnv);
+  }
+
   @Override
   public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
     if (roundEnv.processingOver()) {
@@ -44,7 +57,15 @@ public class SemconvFieldProcessor extends AbstractProcessor {
           return false;
         }
 
-        String annotatedClassFqn = ((TypeElement) annotatedFieldClassElement).getQualifiedName()
+        VariableElement annotatedField;
+        if (!(annotatedElement instanceof VariableElement)) {
+          error("annotated field has unexpected type");
+          return false;
+        }
+        annotatedField = (VariableElement) annotatedElement;
+
+        TypeElement annotatedFieldClass = (TypeElement) annotatedFieldClassElement;
+        String annotatedClassFqn = annotatedFieldClass.getQualifiedName()
             .toString();
 
         String annotatedFieldFqn = annotatedClassFqn + "."
@@ -116,12 +137,46 @@ public class SemconvFieldProcessor extends AbstractProcessor {
         }
 
         // TODO: can we check the target value ?
+        String targetFieldInit = getFieldInit(targetClassType, targetFieldElement);
+        String annotatedFieldInit = getFieldInit(annotatedFieldClass, annotatedField);
+        if (targetFieldInit.equals(annotatedFieldInit)) {
+          error(annotatedClassFqn + " init does not match " + targetFieldFqn);
+        }
 
       }
 
     }
 
     return false;
+  }
+
+  private String getFieldInit(TypeElement type, VariableElement field) {
+    TreePath path = trees.getPath(type);
+    FieldInitScanner scanner = new FieldInitScanner(field.getSimpleName().toString());
+    scanner.scan(path, trees);
+    return scanner.getFieldInitializer();
+  }
+
+  private static class FieldInitScanner extends TreePathScanner<Object, Trees> {
+
+    private String fieldInitializer;
+    private final String fieldName;
+
+    public FieldInitScanner(String fieldName) {
+      this.fieldName = fieldName;
+    }
+
+    @Override
+    public Object visitVariable(VariableTree variableTree, Trees trees) {
+      if (variableTree.getName().toString().equals(fieldName)) {
+        fieldInitializer = variableTree.getInitializer().toString();
+      }
+      return super.visitVariable(variableTree, trees);
+    }
+
+    public String getFieldInitializer() {
+      return fieldInitializer;
+    }
   }
 
   private void error(String msg) {
@@ -132,4 +187,5 @@ public class SemconvFieldProcessor extends AbstractProcessor {
   private void info(String msg) {
     processingEnv.getMessager().printMessage(Diagnostic.Kind.NOTE, msg);
   }
+
 }

@@ -12,7 +12,8 @@ public class Attributes {
   @SemconvField(CodeIncubatingAttributes.class)
   public static final AttributeKey<String> CODE_STACKTRACE = AttributeKey.stringKey("code.stacktrace");
 
+  // just for testing
   @SemconvField(value = CodeIncubatingAttributes.class, field = "CODE_STACKTRACE")
-  public static final AttributeKey<String> CODE_STACKTRACE_ATTRIBUTE = AttributeKey.stringKey("code.stacktrace");
+  public static final AttributeKey<Long> CODE_STACKTRACE_ATTRIBUTE = AttributeKey.longKey("code.stacktrace");
 
 }
