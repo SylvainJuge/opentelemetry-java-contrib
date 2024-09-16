@@ -78,6 +78,11 @@ public class JmxRemoteClientTest {
 
   }
 
+  @Test
+  void serverSSL() {
+    // TODO: test with SSL enabled
+  }
+
   private static void testConnector(ConnectorSupplier connectorSupplier) {
     try (JMXConnector connector = connectorSupplier.get()) {
       assertThat(connector.getMBeanServerConnection())
