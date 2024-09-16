@@ -19,9 +19,22 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
   implementation("io.opentelemetry.instrumentation:opentelemetry-jmx-metrics")
+
+}
+
+testing {
+  suites {
+    val integrationTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("org.testcontainers:junit-jupiter")
+        implementation("org.slf4j:slf4j-simple")
+      }
+    }
+  }
 }
 
 tasks {
+
   shadowJar {
     mergeServiceFiles()
 
@@ -38,7 +51,9 @@ tasks {
 
   withType<Test>().configureEach {
     dependsOn(shadowJar)
+    dependsOn(named("appJar"))
     systemProperty("shadow.jar.path", shadowJar.get().archiveFile.get().asFile.absolutePath)
+    systemProperty("app.jar.path", named<Jar>("appJar").get().archiveFile.get().asFile.absolutePath)
     systemProperty("gradle.project.version", "${project.version}")
   }
 
@@ -49,6 +64,15 @@ tasks {
     enabled = false
   }
 }
+
+tasks.register<Jar>("appJar") {
+  from(sourceSets.get("integrationTest").output)
+  archiveClassifier.set("app")
+  manifest {
+    attributes["Main-Class"] = "io.opentelemetry.contrib.jmxscraper.TestApp"
+  }
+}
+
 
 // Don't publish non-shadowed jar (shadowJar is in shadowRuntimeElements)
 with(components["java"] as AdhocComponentWithVariants) {
