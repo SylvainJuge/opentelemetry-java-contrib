@@ -80,7 +80,15 @@ public class JmxRemoteClientTest {
 
   @Test
   void serverSSL() {
-    // TODO: test with SSL enabled
+    // TODO: test with SSL enabled as RMI registry seems to work differently with SSL
+
+    // create keypair (public,private)
+    // create server keystore with private key
+    // configure server keystore
+    //
+    // create client truststore with public key
+    // can we configure to use a custom truststore ???
+    // connect to server
   }
 
   private static void testConnector(ConnectorSupplier connectorSupplier) {
