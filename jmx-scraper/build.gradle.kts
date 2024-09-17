@@ -69,7 +69,7 @@ tasks.register<Jar>("appJar") {
   from(sourceSets.get("integrationTest").output)
   archiveClassifier.set("app")
   manifest {
-    attributes["Main-Class"] = "io.opentelemetry.contrib.jmxscraper.TestApp"
+    attributes["Main-Class"] = "io.opentelemetry.contrib.jmxscraper.JmxScraper"
   }
 }
 
