@@ -5,6 +5,7 @@
 
 package io.opentelemetry.contrib.jmxscraper.client;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.Provider;
@@ -13,6 +14,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -29,13 +32,17 @@ public class JmxRemoteClient {
 
   private final String host;
   private final int port;
+  @Nullable
   private String userName;
+  @Nullable
   private String password;
+  @Nullable
   private String profile;
+  @Nullable
   private String realm;
   private boolean sslRegistry;
 
-  private JmxRemoteClient(String host, int port) {
+  private JmxRemoteClient(@Nonnull String host, int port) {
     this.host = host;
     this.port = port;
   }
@@ -44,23 +51,27 @@ public class JmxRemoteClient {
     return new JmxRemoteClient(host, port);
   }
 
+  @CanIgnoreReturnValue
   public JmxRemoteClient userCredentials(String userName, String password) {
     this.userName = userName;
     this.password = password;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JmxRemoteClient withRemoteProfile(String profile) {
     this.profile = profile;
     return this;
   }
 
+  @CanIgnoreReturnValue
   public JmxRemoteClient withRealm(String realm) {
     this.realm = realm;
     return this;
   }
 
-  public JmxRemoteClient withSSLRegistry() {
+  @CanIgnoreReturnValue
+  public JmxRemoteClient withSslRegistry() {
     this.sslRegistry = true;
     return this;
   }
@@ -98,23 +109,29 @@ public class JmxRemoteClient {
                   }
                 }
               });
-    } catch (final ReflectiveOperationException e) {
+    } catch (ReflectiveOperationException e) {
       logger.log(Level.WARNING, "SASL unsupported in current environment: " + e.getMessage(), e);
     }
 
     JMXServiceURL url = buildUrl(host, port);
     try {
       if (sslRegistry) {
-        return connectSSLRegistry(url, env);
+        return doConnectSslRegistry(url, env);
       } else {
-        return JMXConnectorFactory.connect(url, env);
+        return doConnect(url, env);
       }
     } catch (IOException e) {
       throw new IOException("Unable to connect to " + url.getHost() + ":" + url.getPort(), e);
     }
   }
 
-  public JMXConnector connectSSLRegistry(JMXServiceURL url, Map<String, Object> env) {
+  @SuppressWarnings("BanJNDI")
+  private static JMXConnector doConnect(JMXServiceURL url, Map<String, Object> env)
+      throws IOException {
+    return JMXConnectorFactory.connect(url, env);
+  }
+
+  public JMXConnector doConnectSslRegistry(JMXServiceURL url, Map<String, Object> env) {
     throw new IllegalStateException("TODO");
   }
 
