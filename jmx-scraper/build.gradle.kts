@@ -9,7 +9,7 @@ plugins {
 description = "JMX metrics scraper"
 otelJava.moduleName.set("io.opentelemetry.contrib.jmxscraper")
 
-application.mainClass.set("io.opentelemetry.contrib.jmxscraper.JmxMetrics")
+application.mainClass.set("io.opentelemetry.contrib.jmxscraper.JmxScraper")
 
 dependencies {
   implementation("io.opentelemetry:opentelemetry-api")
@@ -69,7 +69,7 @@ tasks.register<Jar>("appJar") {
   from(sourceSets.get("integrationTest").output)
   archiveClassifier.set("app")
   manifest {
-    attributes["Main-Class"] = "io.opentelemetry.contrib.jmxscraper.JmxScraper"
+    attributes["Main-Class"] = "io.opentelemetry.contrib.jmxscraper.TestApp"
   }
 }
 
