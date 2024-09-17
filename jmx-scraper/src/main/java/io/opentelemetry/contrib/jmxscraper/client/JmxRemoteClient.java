@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.contrib.jmxscraper.client;
 
 import java.io.IOException;
@@ -6,6 +11,8 @@ import java.security.Provider;
 import java.security.Security;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.management.remote.JMXConnector;
 import javax.management.remote.JMXConnectorFactory;
 import javax.management.remote.JMXServiceURL;
@@ -15,12 +22,10 @@ import javax.security.auth.callback.NameCallback;
 import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.sasl.RealmCallback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class JmxRemoteClient {
 
-  private static final Logger logger = LoggerFactory.getLogger(JmxRemoteClient.class);
+  private static final Logger logger = Logger.getLogger(JmxRemoteClient.class.getName());
 
   private final String host;
   private final int port;
@@ -78,22 +83,23 @@ public class JmxRemoteClient {
 
       env.put(
           "jmx.remote.sasl.callback.handler",
-          (CallbackHandler) callbacks -> {
-            for (Callback callback : callbacks) {
-              if (callback instanceof NameCallback) {
-                ((NameCallback) callback).setName(userName);
-              } else if (callback instanceof PasswordCallback) {
-                char[] pwd = password == null ? null : password.toCharArray();
-                ((PasswordCallback) callback).setPassword(pwd);
-              } else if (callback instanceof RealmCallback) {
-                ((RealmCallback) callback).setText(realm);
-              } else {
-                throw new UnsupportedCallbackException(callback);
-              }
-            }
-          });
+          (CallbackHandler)
+              callbacks -> {
+                for (Callback callback : callbacks) {
+                  if (callback instanceof NameCallback) {
+                    ((NameCallback) callback).setName(userName);
+                  } else if (callback instanceof PasswordCallback) {
+                    char[] pwd = password == null ? null : password.toCharArray();
+                    ((PasswordCallback) callback).setPassword(pwd);
+                  } else if (callback instanceof RealmCallback) {
+                    ((RealmCallback) callback).setText(realm);
+                  } else {
+                    throw new UnsupportedCallbackException(callback);
+                  }
+                }
+              });
     } catch (final ReflectiveOperationException e) {
-      logger.warn("SASL unsupported in current environment: " + e.getMessage(), e);
+      logger.log(Level.WARNING, "SASL unsupported in current environment: " + e.getMessage(), e);
     }
 
     JMXServiceURL url = buildUrl(host, port);
@@ -117,9 +123,7 @@ public class JmxRemoteClient {
     if (host != null) {
       sb.append(host);
     }
-    sb.append(":")
-        .append(port)
-        .append("/jmxrmi");
+    sb.append(":").append(port).append("/jmxrmi");
 
     try {
       return new JMXServiceURL(sb.toString());
@@ -127,5 +131,4 @@ public class JmxRemoteClient {
       throw new IllegalArgumentException("invalid url", e);
     }
   }
-
 }

@@ -1,7 +1,13 @@
-package io.opentelemetry.contrib.jmxscraper;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.contrib.jmxscraper.client;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.contrib.jmxscraper.TestApp;
 import java.io.Closeable;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -53,12 +59,9 @@ public class JmxRemoteClientTest {
     }
   }
 
-
   @Test
   void noAuth() {
-    try (AppContainer app = new AppContainer()
-        .withJmxPort(9990)
-        .start()) {
+    try (AppContainer app = new AppContainer().withJmxPort(9990).start()) {
       testConnector(() -> JmxRemoteClient.createNew(app.getHost(), app.getPort()).connect());
     }
   }
@@ -67,15 +70,13 @@ public class JmxRemoteClientTest {
   void loginPwdAuth() {
     String login = "user";
     String pwd = "t0p!Secret";
-    try (AppContainer app = new AppContainer()
-        .withJmxPort(9999)
-        .withUserAuth(login, pwd)
-        .start()) {
-      testConnector(() -> JmxRemoteClient.createNew(app.getHost(), app.getPort())
-          .userCredentials(login, pwd)
-          .connect());
+    try (AppContainer app = new AppContainer().withJmxPort(9999).withUserAuth(login, pwd).start()) {
+      testConnector(
+          () ->
+              JmxRemoteClient.createNew(app.getHost(), app.getPort())
+                  .userCredentials(login, pwd)
+                  .connect());
     }
-
   }
 
   @Test
@@ -95,20 +96,20 @@ public class JmxRemoteClientTest {
     try (JMXConnector connector = connectorSupplier.get()) {
       assertThat(connector.getMBeanServerConnection())
           .isNotNull()
-          .satisfies(connection -> {
-            try {
-              ObjectName name = new ObjectName(TestApp.OBJECT_NAME);
-              Object value = connection.getAttribute(name, "IntValue");
-              assertThat(value).isEqualTo(42);
-            } catch (Exception e) {
-              throw new RuntimeException(e);
-            }
-          });
+          .satisfies(
+              connection -> {
+                try {
+                  ObjectName name = new ObjectName(TestApp.OBJECT_NAME);
+                  Object value = connection.getAttribute(name, "IntValue");
+                  assertThat(value).isEqualTo(42);
+                } catch (Exception e) {
+                  throw new RuntimeException(e);
+                }
+              });
 
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-
   }
 
   private interface ConnectorSupplier {
@@ -131,19 +132,18 @@ public class JmxRemoteClientTest {
       // SSL registry : com.sun.management.jmxremote.registry.ssl
       // client side ssl auth: com.sun.management.jmxremote.ssl.need.client.auth
 
-
       String appJar = System.getProperty("app.jar.path");
-      assertThat(Paths.get(appJar))
-          .isNotEmptyFile()
-          .isReadable();
+      assertThat(Paths.get(appJar)).isNotEmptyFile().isReadable();
 
-      this.appContainer = new GenericContainer<>("openjdk:8u272-jre-slim")
-          .withCopyFileToContainer(MountableFile.forHostPath(appJar), "/app.jar")
-          .withLogConsumer(new Slf4jLogConsumer(logger))
-          .withNetwork(network)
-          .waitingFor(Wait.forLogMessage(TestApp.APP_STARTED_MSG + "\\n", 1)
-              .withStartupTimeout(Duration.ofSeconds(5)))
-          .withCommand("java", "-jar", "/app.jar");
+      this.appContainer =
+          new GenericContainer<>("openjdk:8u272-jre-slim")
+              .withCopyFileToContainer(MountableFile.forHostPath(appJar), "/app.jar")
+              .withLogConsumer(new Slf4jLogConsumer(logger))
+              .withNetwork(network)
+              .waitingFor(
+                  Wait.forLogMessage(TestApp.APP_STARTED_MSG + "\\n", 1)
+                      .withStartupTimeout(Duration.ofSeconds(5)))
+              .withCommand("java", "-jar", "/app.jar");
     }
 
     @CanIgnoreReturnValue
@@ -177,20 +177,19 @@ public class JmxRemoteClientTest {
         properties.put("com.sun.management.jmxremote.access.file", "/jmx.access");
       }
 
-      String confArgs = properties.entrySet()
-          .stream()
-          .map(e -> {
-            String s = "-D" + e.getKey();
-            if (!e.getValue().isEmpty()) {
-              s += "=" + e.getValue();
-            }
-            return s;
-          })
-          .collect(Collectors.joining(" "));
+      String confArgs =
+          properties.entrySet().stream()
+              .map(
+                  e -> {
+                    String s = "-D" + e.getKey();
+                    if (!e.getValue().isEmpty()) {
+                      s += "=" + e.getValue();
+                    }
+                    return s;
+                  })
+              .collect(Collectors.joining(" "));
 
-      appContainer
-          .withEnv("JAVA_TOOL_OPTIONS", confArgs)
-          .start();
+      appContainer.withEnv("JAVA_TOOL_OPTIONS", confArgs).start();
 
       logger.info("Test application JMX port mapped to {}:{}", getHost(), getPort());
 
@@ -238,5 +237,4 @@ public class JmxRemoteClientTest {
       Files.write(path, line.getBytes(StandardCharsets.UTF_8));
     }
   }
-
 }

@@ -1,8 +1,13 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.contrib.jmxscraper;
 
+import java.lang.management.ManagementFactory;
 import javax.management.MBeanServer;
 import javax.management.ObjectName;
-import java.lang.management.ManagementFactory;
 
 @SuppressWarnings("all")
 public class TestApp implements TestAppMXBean {
@@ -14,7 +19,7 @@ public class TestApp implements TestAppMXBean {
 
   public static void main(String[] args) {
     TestApp app = TestApp.start();
-    while(app.isRunning()){
+    while (app.isRunning()) {
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {
@@ -23,10 +28,9 @@ public class TestApp implements TestAppMXBean {
     }
   }
 
-  private TestApp() {
-  }
+  private TestApp() {}
 
-  static TestApp start(){
+  static TestApp start() {
     TestApp app = new TestApp();
     MBeanServer mbs = ManagementFactory.getPlatformMBeanServer();
     try {
@@ -39,7 +43,6 @@ public class TestApp implements TestAppMXBean {
     System.out.println(APP_STARTED_MSG);
     return app;
   }
-
 
   @Override
   public int getIntValue() {
