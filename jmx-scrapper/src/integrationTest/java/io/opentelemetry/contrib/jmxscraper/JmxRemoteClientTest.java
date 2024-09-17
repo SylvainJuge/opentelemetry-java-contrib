@@ -126,7 +126,11 @@ public class JmxRemoteClientTest {
     private AppContainer() {
       this.properties = new HashMap<>();
 
-      properties.put("com.sun.management.jmxremote.ssl", "false");
+      properties.put("com.sun.management.jmxremote.ssl", "false"); // TODO :
+
+      // SSL registry : com.sun.management.jmxremote.registry.ssl
+      // client side ssl auth: com.sun.management.jmxremote.ssl.need.client.auth
+
 
       String appJar = System.getProperty("app.jar.path");
       assertThat(Paths.get(appJar))
